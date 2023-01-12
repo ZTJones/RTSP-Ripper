@@ -8,10 +8,10 @@ using std::filesystem::directory_iterator;
 
 namespace fs = std::filesystem;
 
-void encodeOnLoop(bool* running) // Encodes an RTSP stream to mp4, and it just don't stop... Unless a flag is lifted.
+void encodeOnLoop(bool* running, std::string inputAddress) // Encodes an RTSP stream to mp4, and it just don't stop... Unless a flag is lifted.
 {
     std::string seconds = "30";
-    std::string cameraAddress = "rtsp://127.0.0.1:8554/stream";
+    std::string cameraAddress = inputAddress;
     std::string fileNameBase = "streamCap";
     std::string outputFormat = ".mp4";
     int loop = 0;
@@ -25,10 +25,14 @@ void encodeOnLoop(bool* running) // Encodes an RTSP stream to mp4, and it just d
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     bool ready = false;
     std::string path = ".";
+
+    
+
+    // std::string inputAddress = argv[0];
 
     while (true) { // A bit of quick logic to create a folder to work with.
         for (const auto & file : fs::directory_iterator(path))
@@ -63,9 +67,15 @@ int main()
     bool continueRunning = true;
     char inputChar;
 
-    std::thread ffmpegLoop(encodeOnLoop, &continueRunning); // We're running encodeOnLoop in a separate thread to prevent blocking our input.
+    if (argc < 2) {
+        cout << "You need to provide the camera address as a parameter." << endl;
+        return 0;
+    }
+    // This is where we're calling the new thread
+    std::thread ffmpegLoop(encodeOnLoop, &continueRunning, argv[1]); // We're running encodeOnLoop in a separate thread to prevent blocking our input.
     while (true)
     {
+
         cout << "Stop process?  y/n" << endl;
         std::cin >> inputChar; // While the encoding loop is running, you can interrupt it at any time by typing 'y' and hitting enter.
         if (inputChar == 'y') {
